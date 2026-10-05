@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Sonrisas | Libros Didácticos Infantiles</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandPink: '#d75ebc',
+                        brandMint: '#00cd96',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col items-center py-8 px-4">
+
+    <!-- Contenedor Principal Estilo Linktree -->
+    <div class="w-full max-w-4xl bg-white shadow-xl rounded-3xl p-6 md:p-10 border border-slate-100">
+        
+        <!-- Perfil Principal -->
+        <div class="flex flex-col items-center text-center">
+            <div class="relative mb-4">
+                <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300&h=300" 
+                     alt="Dr. Dentista" 
+                     class="w-32 h-32 rounded-full object-cover border-4 border-brandMint shadow-md">
+                <span class="absolute bottom-1 right-1 bg-brandMint text-white p-2 rounded-full text-xs shadow" title="Verificado">
+                    <i class="fa-solid fa-tooth"></i>
+                </span>
+            </div>
+            
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                Dr. Sonrisas <i class="fa-solid fa-circle-check text-brandMint text-lg"></i>
+            </h1>
+            <p class="text-slate-600 font-medium mt-1">Odontólogo Pediatra & Autor de Libros Infantiles</p>
+            <p class="text-sm text-slate-500 max-w-md mt-2">
+                🦷 Creando aventuras divertidas para enseñar a los niños la importancia de cuidar sus dientes y una correcta higiene bucal de forma lúdica.
+            </p>
+
+            <!-- Redes Sociales en Formato Horizontal -->
+            <div class="flex flex-wrap justify-center gap-3 mt-6">
+                <a href="https://wa.me/tu_numero" target="_blank" class="bg-brandMint text-white px-5 py-2.5 rounded-full font-medium shadow hover:opacity-90 transition flex items-center gap-2 text-sm">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+                </a>
+                <a href="https://instagram.com/tu_usuario" target="_blank" class="bg-brandPink text-white px-5 py-2.5 rounded-full font-medium shadow hover:opacity-90 transition flex items-center gap-2 text-sm">
+                    <i class="fa-brands fa-instagram text-lg"></i> Instagram
+                </a>
+                <a href="https://tiktok.com/@tu_usuario" target="_blank" class="bg-slate-900 text-white px-5 py-2.5 rounded-full font-medium shadow hover:opacity-90 transition flex items-center gap-2 text-sm">
+                    <i class="fa-brands fa-tiktok text-lg"></i> TikTok
+                </a>
+                <a href="mailto:tu_correo@example.com" class="bg-slate-200 text-slate-700 px-5 py-2.5 rounded-full font-medium shadow hover:bg-slate-300 transition flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-envelope text-lg"></i> Contacto
+                </a>
+            </div>
+        </div>
+
+        <hr class="my-8 border-slate-100">
+
+        <!-- Sección Catálogo de Libros (Grid de 3 Columnas) -->
+        <div>
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-slate-900">📚 Mis Libros Didácticos</h2>
+                <p class="text-sm text-slate-500 mt-1">Descarga cuentos digitales diseñados para educar sonrientes</p>
+            </div>
+
+            <!-- Contenedor donde JavaScript inyectará los libros de Google Sheets -->
+            <div id="catalogo-libros" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Estado de carga inicial -->
+                <div class="col-span-full text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl text-brandMint mb-2"></i>
+                    <p>Cargando catálogo de libros actualizados...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-xs text-slate-400">
+            &copy; 2026 Dr. Sonrisas. Todos los derechos reservados.
+        </div>
+    </div>
+
+    <!-- VENTANA EMERGENTE (MODAL) DE DETALLE DEL LIBRO -->
+    <div id="modal-detalle" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4" onclick="cerrarModalDetalle()">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 relative shadow-2xl overflow-y-auto max-h-[90vh]" onclick="event.stopPropagation()">
+            <button onclick="cerrarModalDetalle()" class="absolute top-4 right-4 bg-slate-100 text-slate-600 w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-200 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div id="modal-contenido-interno">
+                <!-- Contenido inyectado dinámicamente al hacer clic en un libro -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Sincronización con Google Sheets y Lógica del Modal -->
+    <script>
+        // ⚠️ PEGA AQUÍ TU ENLACE CSV DE GOOGLE SHEETS PUBLICADO EN LA WEB
+        const SHEET_CSV_URL = 'TU_ENLACE_DE_GOOGLE_SHEETS_CSV_AQUI';
+
+        let listaLibrosGlobal = [];
+
+        async function cargarCatalogo() {
+            const contenedor = document.getElementById('catalogo-libros');
+
+            if (SHEET_CSV_URL.includes('TU_ENLACE')) {
+                listaLibrosGlobal = [
+                    {
+                        titulo: "Aventuras en el Reino de los Dientes",
+                        descripcion: "Un cuento mágico donde los guardianes del cepillo combaten al monstruo de la caries enseñando la técnica correcta de cepillado diario de forma divertida.",
+                        precio: "$5.00 USD",
+                        imagenPrincipal: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?auto=format&fit=crop&q=80&w=600",
+                        imagenesExtra: ["https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=600", "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=600"],
+                        enlaceCompra: "https://wa.me/tu_numero?text=Hola,%20quiero%20comprar%20el%20libro%20Aventuras%20en%20el%20Reino%20de%20los%20Dientes"
+                    },
+                    {
+                        titulo: "Mi Primer Cepillado Mágico",
+                        descripcion: "Guía ilustrada paso a paso para convertir el momento del cepillado nocturno en un juego emocionante sin berrinches.",
+                        precio: "$4.50 USD",
+                        imagenPrincipal: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=600",
+                        imagenesExtra: ["https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=600"],
+                        enlaceCompra: "https://wa.me/tu_numero?text=Hola,%20quiero%20comprar%20el%20libro%20Mi%20Primer%20Cepillado%20Mágico"
+                    }
+                ];
+                renderizarLibros(listaLibrosGlobal);
+                return;
+            }
+
+            try {
+                const response = await fetch(SHEET_CSV_URL);
+                const data = await response.text();
+                listaLibrosGlobal = parsearCSV(data);
+                
+                if (listaLibrosGlobal.length === 0) {
+                    contenedor.innerHTML = `<p class="col-span-full text-center text-slate-500">No hay libros cargados en este momento.</p>`;
+                    return;
+                }
+                
+                renderizarLibros(listaLibrosGlobal);
+            } catch (error) {
+                console.error("Error al cargar Google Sheets:", error);
+                contenedor.innerHTML = `<p class="col-span-full text-center text-red-500">Error al conectar con la hoja de cálculo. Verifica el enlace.</p>`;
+            }
+        }
+
+        function parsearCSV(text) {
+            const lines = text.split('\n');
+            const result = [];
+            if(lines.length < 2) return result;
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const currentLine = lines[i].split(',');
+                if (currentLine.length >= 6) {
+                    result.push({
+                        titulo: currentLine[0]?.trim() || '',
+                        descripcion: currentLine[1]?.trim() || '',
+                        precio: currentLine[2]?.trim() || '',
+                        imagenPrincipal: currentLine[3]?.trim() || '',
+                        imagenesExtra: currentLine[4] ? currentLine[4].split(';').map(s => s.trim()).filter(Boolean) : [],
+                        enlaceCompra: currentLine[5]?.trim() || '#'
+                    });
+                }
+            }
+            return result;
+        }
+
+        function renderizarLibros(libros) {
+            const contenedor = document.getElementById('catalogo-libros');
+            contenedor.innerHTML = '';
+
+            libros.forEach((libro, index) => {
+                const todasLasImgs = [libro.imagenPrincipal, ...libro.imagenesExtra].filter(Boolean);
+                const idUnico = `libro-${index}`;
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex flex-col overflow-hidden cursor-pointer";
+                card.onclick = () => abrirModalDetalle(index);
+
+                let htmlMiniaturas = '';
+                if (todasLasImgs.length > 1) {
+                    htmlMiniaturas = `<div class="flex gap-2 mt-3 overflow-x-auto pb-1" onclick="event.stopPropagation()">`;
+                    todasLasImgs.forEach((imgUrl, imgIndex) => {
+                        const activeBorder = imgIndex === 0 ? 'border-brandMint' : 'border-transparent';
+                        htmlMiniaturas += `
+                            <button onclick="cambiarImagenCard('${idUnico}', '${imgUrl}', this)" class="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border-2 ${activeBorder} focus:outline-none transition">
+                                <img src="${imgUrl}" class="w-full h-full object-cover">
+                            </button>
+                        `;
+                    });
+                    htmlMiniaturas += `</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="relative bg-slate-100 p-2">
+                        <img id="${idUnico}-principal" src="${todasLasImgs[0] || 'https://via.placeholder.com/300'}" 
+                             alt="${libro.titulo}" 
+                             class="w-full h-52 object-cover rounded-xl">
+                        <span class="absolute top-4 right-4 bg-brandMint text-white font-bold text-xs px-3 py-1 rounded-full shadow">
+                            ${libro.precio}
+                        </span>
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h3 class="font-bold text-slate-900 text-lg mb-1">${libro.titulo}</h3>
+                        <p class="text-xs text-slate-600 flex-grow mb-4 line-clamp-2 leading-relaxed">${libro.descripcion}</p>
+                        
+                        ${htmlMiniaturas}
+
+                        <div class="mt-4 w-full bg-brandPink text-white text-center font-medium py-2.5 rounded-xl shadow hover:opacity-90 transition flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-eye"></i> Ver Detalle
+                        </div>
+                    </div>
+                `;
+
+                contenedor.appendChild(card);
+            });
+        }
+
+        function cambiarImagenCard(idLibro, nuevaUrl, botonElemento) {
+            const imgPrincipal = document.getElementById(`${idLibro}-principal`);
+            if(imgPrincipal) imgPrincipal.src = nuevaUrl;
+
+            const contenedorMinis = botonElemento.parentElement;
+            const botones = contenedorMinis.querySelectorAll('button');
+            botones.forEach(b => b.classList.remove('border-brandMint'));
+            botones.forEach(b => b.classList.add('border-transparent'));
+            botonElemento.classList.remove('border-transparent');
+            botonElemento.classList.add('border-brandMint');
+        }
+
+        function abrirModalDetalle(index) {
+            const libro = listaLibrosGlobal[index];
+            if (!libro) return;
+
+            const todasLasImgs = [libro.imagenPrincipal, ...libro.imagenesExtra].filter(Boolean);
+            const modalId = 'modal-preview';
+
+            let htmlMinisModal = '';
+            todasLasImgs.forEach((img, i) => {
+                const borderClass = i === 0 ? 'border-brandMint' : 'border-transparent';
+                htmlMinisModal += `
+                    <button onclick="cambiarImagenModal('${modalId}', '${img}', this)" class="w-14 h-14 rounded-lg overflow-hidden border-2 ${borderClass} flex-shrink-0 transition">
+                        <img src="${img}" class="w-full h-full object-cover">
+                    </button>
+                `;
+            });
+
+            const contenidoHtml = `
+                <div class="text-center">
+                    <div class="relative bg-slate-100 p-2 rounded-2xl mb-4">
+                        <img id="${modalId}-img" src="${todasLasImgs[0]}" class="w-full h-64 object-cover rounded-xl shadow-inner">
+                        <span class="absolute top-5 right-5 bg-brandMint text-white font-bold text-sm px-4 py-1.5 rounded-full shadow">
+                            ${libro.precio}
+                        </span>
+                    </div>
+
+                    ${todasLasImgs.length > 1 ? `<div class="flex gap-2 justify-center overflow-x-auto mb-4 pb-2">${htmlMinisModal}</div>` : ''}
+
+                    <h3 class="text-2xl font-bold text-slate-900 mb-2">${libro.titulo}</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-6 px-2">${libro.descripcion}</p>
+
+                    <a href="${libro.enlaceCompra}" target="_blank" 
+                       class="w-full bg-brandPink text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:opacity-90 transition flex items-center justify-center gap-2 text-base">
+                        <i class="fa-solid fa-cart-shopping"></i> Comprar Libro Ahora
+                    </a>
+                </div>
+            `;
+
+            document.getElementById('modal-contenido-interno').innerHTML = contenidoHtml;
+            document.getElementById('modal-detalle').classList.remove('hidden');
+        }
+
+        function cambiarImagenModal(modalId, url, boton) {
+            document.getElementById(`${modalId}-img`).src = url;
+            const parent = boton.parentElement;
+            parent.querySelectorAll('button').forEach(b => {
+                b.classList.remove('border-brandMint');
+                b.classList.add('border-transparent');
+            });
+            boton.classList.remove('border-transparent');
+            boton.classList.add('border-brandMint');
+        }
+
+        function cerrarModalDetalle() {
+            document.getElementById('modal-detalle').classList.add('hidden');
+        }
+
+        // Cargar al iniciar
+        document.addEventListener('DOMContentLoaded', cargarCatalogo);
+    </script>
+</body>
+</html>
